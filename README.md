@@ -1,4 +1,5 @@
-# Proyecto de Sistema de Recuperacion de Informacion de la Facultad de Matematica y Computacion de la Universidad de La Habana
-## Integrantes
+# Review Rating System
+## Members
 1. David Sanchez Iglesias
 2. Yoel Enriquez Sena
+
