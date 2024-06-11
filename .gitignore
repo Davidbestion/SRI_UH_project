@@ -1,0 +1,3 @@
+# Ignorar carpeta del environment
+.venv/
+__pycache__/
