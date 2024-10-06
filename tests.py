@@ -1,10 +1,10 @@
-from load_data import amazon_reviews
+from corpora import amazon_data, amazon_polarity
 
 # Example: Print the first review
-print(amazon_reviews['train'][0])
+print(amazon_data['train'][0])
 
 # Example: Print the first review
-print(amazon_reviews['test'][0])
+print(amazon_data['test'][0])
 
 
     
