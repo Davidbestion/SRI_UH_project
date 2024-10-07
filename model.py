@@ -1,8 +1,6 @@
 import tqdm
 import time
-from utils import save_sentence, load_sentences
 
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
@@ -23,8 +21,6 @@ def build_model(evaluate=False):
     
     print('Preprocessing text...')
     timer1 = time.time()
-    # Split the data into training and test sets
-    # X_train, X_test, y_train, y_test = train_test_split(train_texts, train_labels, test_size=0.2)
     train_texts, train_labels = prepare_data(corpus_train)
     test_texts, test_labels = prepare_data(corpus_test)
     print('Preprocessing time:', time.time()-timer1)
@@ -60,6 +56,8 @@ def get_corpus():
     return corpus_train, corpus_test
 
 def preprocess_text(text):
+    if text is None:
+        return ''
     # Tokenize the text
     tokens = word_tokenize(text.lower())
     # Remove stop words
