@@ -1,4 +1,4 @@
-import process_data
+from src import process_data
 
 def main():
 

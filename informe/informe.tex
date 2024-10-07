@@ -1,0 +1,48 @@
+%Informe usando la plantilla LNCS
+
+\documentclass{llncs}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+
+\title{Informe del proyecto de sistema de recuperacion de informaci\'on}
+\author{David S\'anchez Iglesias}
+\institute{Universidad de La Habana, Facultad de Matem\'atica y Computaci\'on}
+
+
+
+\begin{document}
+\maketitle
+
+\begin{Introducción}
+    En los \'ultimos a\~nos, con el desarrollo de internet y el aumento de la cantidad de personas que utilizan la red, se ha incrementado tambi\'en enormemente la cantidad de informaci\'on que se encuentra disponible en la red. Como resultado, surgieron algoritmos y t\'ecnicas para recuperar informaci\'on de manera eficiente. Muchos de estos est\'an destinados a mejorar la experiencia de los usuarios al buscar o incluso comprar en l\'inea. Debido a la cantidad masiva de usuarios que un sitio web de ventas puede tener diariamente conectados a la vez, y a la cantidad de informaci\'on que cada uno genera y la cantidad de productos que cada uno puede potencialmente vender y comprar, ofrecer los mejores productos para cada cliente de manera que estos satisfagan sus necesidades y se amolden a sus gustos se ha convertido en un problema de gran importancia. Para poder ofrecer dichos productos a las personas correctas es necesario extraer y organizar cierta cantidad de datos de los usuarios y de los productos, as\'i como usarlos de manera inteligente. As\'i, aparecen las rese\~nas, informaci\'on que los usuarios dan a los administradores del sitio para saber c\'omo se sintieron con su compra, por qu\'e se sintieron as\'i y por qu\'e aprueban el producto o no. En este proyecto se propone un sistema de recuperaci\'on de informaci\'on que use estos datos y genere informaci\'on \'util para que los vendedores puedan ofrecer los productos correctos a los clientes correctos, maximizando as\'i sus ganancias y la probabilidad de que el usuario comprador obtenga el producto que busca de la manera m\'as r\'apida y eficiente posible.
+\end{Introducción}
+
+\section{Porblema de ejemplo}
+    Se tiene un sitio web de ventas en l\'inea as\'i como las rese\~nas de un gran n\'umero de usuarios acerca de los productos que este sitio web vende. Se quiere saber cu\'ales productos recomendar a cada usuario de manera que a este le parezca m\'as atractivo y lo estimule a comprarlo.
+
+% Estado del arte
+\section{Estado del arte}
+    En la actualidad existen muchos sistemas de recomendaci\'on que se basan en la informaci\'on de los usuarios y de los productos para ofrecer productos a los usuarios. Algunos de estos sistemas son:
+    \begin{itemize}
+        \item Collaborative filtering: Este m\'etodo se basa en la idea de que si a un usuario le gustan ciertos productos, entonces le gustar\'an tambi\'en los productos que a otros usuarios que tienen gustos similares les gustan. Este m\'etodo se basa en la informaci\'on de los usuarios y de los productos.
+        \item Content-based filtering: Este m\'etodo se basa en la idea de que si a un usuario le gustan ciertos productos, entonces le gustar\'an tambi\'en los productos que sean similares a estos. Este m\'etodo se basa en la informaci\'on de los productos.
+        \item Hybrid methods: Estos m\'etodos combinan los dos anteriores para ofrecer recomendaciones a los usuarios.
+    \end{itemize}
+    Plataformas como Amazon, Netflix y Spotify usan estos m\'etodos para ofrecer productos a sus usuarios y, debido a la cantidad masiva de usuarios que tienen diariamente y que rese\~nan sus productos, la utilizaci\'on de esas rese\~as puede ser de gran ayuda para mejorar la calidad de las recomendaciones que se les ofrecen a los usuarios.
+    En este proyecto se propone un sistema de recuperaci\'on que extrae y organiza dicha informaci\'on. Es importante aclarar que este sistema no se encarga de ofrecer recomendaciones a los usuarios, sino de extraer y organizar la informaci\'on de las rese\~nas para que los vendedores puedan ofrecer mejores propuestas de ventas a los usuarios.
+
+\section{Descripci\'on del sistema}
+    Para la realizaci\'on de este proyecto se usaron rese\'~nas de Amazon sobre productos digitales (programas inform\'aticos) que recibieron al menos una rese\'na por parte de alg\'un usuario (no se us\'o todo el dataset por su inmenso tama\~no: casi 50 gb de rese\~nas, de ah\'i la necesidad de reducir el tama\~no, y por eso se escogi\'o solamente la muestra relativa a programas digitales).
+    Lo primero que se suele buscar y que suele llamar la atenci\'on de los vendedores son los productos m\'as populares, los m\'as vendidos. Independientemente de si gustaron o no por la naturaleza de sus rese\~nas, estos productos responden a las necesidades de la gente o son del agrado de la mayor\'ia, de ah\'i que sea importante saber cu\'ales son. El m\'etodo para extraerlos es bastante sencillo: se crea una lista de todos los productos vendidos y se ordena de mayor a menor seg\'un la cantidad de veces que fue comprado por una persona. El dataset de Amazon ofrece, para cada rese\~na, si el usuario que la escribi\'o compr\'o o no el producto. De esta manera, se puede saber cu\'antas veces fue comprado un producto por la cantidad de rese\~nas que tiene.
+    Independientemente de si son populares o no, aquellos productos que despiertan la curiosidad de los usuarios, que son m\'as pol\'emicos, que generan m\'as rese\~nas, e incluso los que no, los menos pol\'emicos, son tambi\'en de inter\'es para los vendedores. Para ellos, se hace una busqueda enfocada en los productos. Por cada producto se cuenta la cantidad de rese\~nas que tiene y la lista de productos resultante se ordena de mayor a menor seg\'un la cantidad de rese\~nas que tiene.
+    Otra estrategia que se enfoca en los productos es usar la clasificaci\'on por estrellas. Puede haber quien no desea o no puede en el momento redactar una rese\~na. En esos casos, la clasificaci\'on por estrellas es de gran ayuda. Se cuenta la cantidad de rese\~nas que tiene cada producto y se ordena de mayor a menor seg\'un la cantidad de estrellas que tiene. E incluso si s\'i tiene una rese\~na escrita, la clasificaci\'on por estrellas es de gran ayuda para saber si el producto es bueno o no ya que constituye la forma m\'as r\'apida de clasificar un producto para un usuario segun su utilidad y/o calidad. Y es por eso que este proyecto tambi\'en extrae tanto los productos con mejor clasificaci\'on de estrellas como los de menor.
+    Luego, saliendo ya de las estrategias enfocadas en los productos, se suele concentrar la atenci\'on en los usuarios y el tipo de producto que compran. Sabiendo qu\'e productos ha comprado una persona, ser\'ia posible predecir cu\'ales otros de los que no ha comprado es m\'as probable que necesite o que se vea estimulado a comprar. Para ello, la estrategia que se suele usar es comparar el registro de compras, los productos que ha comprado, con el de otros usuarios. De este modo, se puede intuir que el primer usuario tiene "las mismas necesidades o gustos" que aquellos usuarios que han comprado lo mismo. As\'i, es posible que si dos personas han hecho las mismas compras, entonces es probable que compren los mismos productos en el futuro. Para extraer estos productos, se compara el registro de compras de cada usuario con el de los dem\'as y se extraen aquellos productos que los usuarios con mayor similitud en sus compras han comprado y que el usuario en cuesti\'on a\'un no. Este m\'etodo es bastante eficaz cuando el n\'umero de usuarios en la plataforma es grande y cuando ya la persona en cuesti\'on posee un historial de compras mas o menos extenso. Mientras m\'as productos haya comprado, m\'as predecible puede resultar su siguiente compra usando este m\'etodo.
+    Por \'ultimo, en este proyecto se propone el uso de los textos de las propias rese\~nas. Usando un m\'etodo de "an\'alisis de sentimiento" se puede detectar si el texto de una rese\~na es positivo o negativo. Esto puede informar mucho acerca de la calidad del producto en cuesti\'on. Por ejemplo, es posible que un producto sea un \'exito de ventas pero no porque sea bueno o de gran calidad, sino porque responde a una necesidad general de la gente hasta el momento no satisfecha o porque al menos, una de sus caracter\'isticas es satisface dicha necesidad. En este caso, si el producto posee muchas rese\~nas egativas pero es muy vendido, se puede intuir cu\'al es la necesidad que satisface y se puede usar esta informaci\'on para mejorar el producto o para ofrecer productos similares a los usuarios. Por otro lado, si el producto es muy vendido y posee muchas rese\~nas positivas, entonces se puede intuir que el producto es de gran calidad y que satisface las necesidades de los usuarios. En este proyecto se propone el uso de un m\'etodo de an\'alisis de sentimiento para extraer los productos con m\'as rese\~nas positivas y los que tienen m\'as rese\~nas negativas.
+    Para esto \'ultimo, se usaron las bibliotecas de Python \textit{nltk} y \textit{sklearn} para el an\'alisis de sentimiento. Se us\'o el m\'etodo de \textit{Desition Tree (\'arbol de decisi\'on)} para clasificar los textos de las rese\~nas en positivos y negativos. Para entrenar el modelo se us\'o el dataset \textit{amazon polarity}, un dataset tambi\'en de rese\~nas de Amazon que posee un fragmento para entrenamiento y uno de tests, preparado para este tipo de an\'alisis.
+    
+\end{document}
