@@ -1,10 +1,10 @@
 import nltk
 
-# nltk.download('all')
-nltk.download('punkt_tab')
-nltk.download('vader_lexicon')
-nltk.download('stopwords')
-nltk.download('wordnet')
+# # nltk.download('all')
+# nltk.download('punkt_tab')
+# nltk.download('vader_lexicon')
+# nltk.download('stopwords')
+# nltk.download('wordnet')
 
 from datasets import load_dataset
 import pandas as pd

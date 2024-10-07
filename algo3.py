@@ -7,7 +7,7 @@ from nltk.stem import WordNetLemmatizer
 
 import tqdm
 
-CANTIDAD = 10000
+CANTIDAD = 400000
 
 # Tokenizacion
 def preprocess_text(text):
@@ -29,7 +29,6 @@ for i in tqdm.tqdm(range(0,CANTIDAD)):
 
 # Preparacion de datos
 # Preprocesamiento de texto
-
 print('Preprocessing text...')
 for i in tqdm.tqdm(range(0,CANTIDAD)):
     corpus[i]['content'] = preprocess_text(corpus[i]['content'])
