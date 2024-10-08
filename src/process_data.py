@@ -1,12 +1,73 @@
 import tqdm
-from src.model import build_model, preprocess_text
-from src.corpora import amazon_data 
+from model import build_model, preprocess_text
+from corpora import amazon_data 
 
 from tqdm import tqdm
 
 CANTIDAD = 10000
      
 corpus = amazon_data  
+
+class Data:
+    def __init__(self):
+        print('Loading products...')    
+        self.products = get_products()
+        print('Loading products info...')
+        self.sells, self.ratings, self.reviews = get_products_info(self.products)
+        print('Loading users_products...')
+        self.users_products = get_usersxproducts()
+        print('Loading users alike...')
+        self.users_alike = get_users_alike(self.users_products)
+        print('Loading recommendations...')
+        self.recommendations = recommend_products_by_user(self.users_products, self.users_alike)
+
+    def get_most_popular_products(self, n=10):
+        return most_popular_products(self.sells, n)
+    
+    def get_best_rated_products(self, n=10):
+        return best_rated_products(self.ratings, n)
+    
+    def get_worst_rated_products(self, n=10):
+        return worst_rated_products(self.ratings, n)
+    
+    def get_positive_reviews(self, n=10):
+        return positive_reviews(self.reviews, n)
+    
+    def get_negative_reviews(self, n=10):
+        return negative_reviews(self.reviews, n)
+    
+    def get_recommend_products(self, n=10):
+        return recommend_products(self.recommendations, self.sells, n)
+    
+    def get_products(self):
+        return self.products
+
+    def get_sells(self):
+        return self.sells
+
+    def get_ratings(self):
+        return self.ratings
+
+    def get_reviews(self):
+        return self.reviews
+
+    def get_users_products(self):
+        return self.users_products
+
+    def get_users_alike(self):
+        return self.users_alike
+
+    def get_recommendations(self):
+        return self.recommendations
+
+    def get_products(self):
+        return self.products
+
+    def get_sells(self):
+        return self.sells
+
+    def get_ratings(self):
+        return self.ratings
     
 
 def get_products():
@@ -16,34 +77,61 @@ def get_products():
             products.append(corpus['product_title'][i])
     return products
 
-def get_sells(products):
+def get_products_info(products):
     sells = {}
-    for product in tqdm(products, desc="Calculating Sells"):
+    ratings = {}
+    reviews = {}
+    model, vectorizer = build_model(evaluate=True)
+    for product in tqdm(products, desc="Getting Products Info"):
+        if product not in ratings:
+            ratings[product] = []
         if product not in sells:
             sells[product] = 0
-        for i in tqdm(range(0, CANTIDAD), desc=f"Counting sells for {product}", leave=False):
+        if product not in reviews:
+            reviews[product] = []
+        for i in tqdm(range(0, CANTIDAD), desc=f"Collecting data for {product}", leave=False):
             if corpus['product_title'][i] == product and corpus['verified_purchase'][i] == 'Y':
                 sells[product] += 1
+            if corpus['product_title'][i] == product:
+                ratings[product].append(corpus['star_rating'][i])
+            if corpus['product_title'][i] == product and corpus['review_body'][i]:
+                reviews[product].append(preprocess_text(corpus['review_body'][i]))
+    for product in products:
+        ratings[product] = sum(ratings[product]) / len(ratings[product]) if ratings[product] else 0
+        reviews[product] = sum(model.predict(vectorizer.transform(reviews[product]))) / len(reviews[product]) if reviews[product] else 0
     sells = sorted(sells.items(), key=lambda x: x[1], reverse=True)
-    return sells
+    ratings = sorted(ratings.items(), key=lambda x: x[1], reverse=True)
+    reviews = sorted(reviews.items(), key=lambda x: x[1], reverse=True)
+    return sells, ratings, reviews
+
+# def get_sells(products):
+#     sells = {}
+#     for product in tqdm(products, desc="Calculating Sells"):
+#         if product not in sells:
+#             sells[product] = 0
+#         for i in tqdm(range(0, CANTIDAD), desc=f"Counting sells for {product}", leave=False):
+#             if corpus['product_title'][i] == product and corpus['verified_purchase'][i] == 'Y':
+#                 sells[product] += 1
+#     sells = sorted(sells.items(), key=lambda x: x[1], reverse=True)
+#     return sells
 
 def most_popular_products(sells, amount):
     # 10 more popular products
     popular_products = sells[:amount]
     return popular_products
 
-def get_ratings(products):
-    ratings = {}
-    for product in tqdm(products, desc="Getting Ratings"):
-        if product not in ratings:
-            ratings[product] = []
-        for i in tqdm(range(0, CANTIDAD), desc=f"Collecting ratings for {product}", leave=False):
-            if corpus['product_title'][i] == product:
-                ratings[product].append(corpus['star_rating'][i])
-    for product in products:
-        ratings[product] = sum(ratings[product]) / len(ratings[product]) if ratings[product] else 0
-    ratings = sorted(ratings.items(), key=lambda x: x[1], reverse=True)
-    return ratings
+# def get_ratings(products):
+#     ratings = {}
+#     for product in tqdm(products, desc="Getting Ratings"):
+#         if product not in ratings:
+#             ratings[product] = []
+#         for i in tqdm(range(0, CANTIDAD), desc=f"Collecting ratings for {product}", leave=False):
+#             if corpus['product_title'][i] == product:
+#                 ratings[product].append(corpus['star_rating'][i])
+#     for product in products:
+#         ratings[product] = sum(ratings[product]) / len(ratings[product]) if ratings[product] else 0
+#     ratings = sorted(ratings.items(), key=lambda x: x[1], reverse=True)
+#     return ratings
 
 def best_rated_products(ratings, amount):
     # 10 best rated products
@@ -55,19 +143,19 @@ def worst_rated_products(ratings, amount):
     worst_rated_products = ratings[-amount:]
     return worst_rated_products
 
-def get_reviews_sentiment(products):
-    model_, vectorizer = build_model(evaluate=True)
-    reviews = {}
-    for product in tqdm(products, desc="Getting Reviews Sentiment"):
-        if product not in reviews:
-            reviews[product] = []
-        for i in tqdm(range(0, CANTIDAD), desc=f"Collecting reviews for {product}", leave=False):
-            if corpus['product_title'][i] == product:
-                reviews[product].append(preprocess_text(corpus['review_body'][i]))
-    for product in products:
-        reviews[product] = sum(model_.predict(vectorizer.transform(reviews[product]))) / len(reviews[product]) if reviews[product] else 0
-    reviews = sorted(reviews.items(), key=lambda x: x[1], reverse=True)
-    return reviews
+# def get_reviews_sentiment(products):
+#     model_, vectorizer = build_model(evaluate=True)
+#     reviews = {}
+#     for product in tqdm(products, desc="Getting Reviews Sentiment"):
+#         if product not in reviews:
+#             reviews[product] = []
+#         for i in tqdm(range(0, CANTIDAD), desc=f"Collecting reviews for {product}", leave=False):
+#             if corpus['product_title'][i] == product:
+#                 reviews[product].append(preprocess_text(corpus['review_body'][i]))
+#     for product in products:
+#         reviews[product] = sum(model_.predict(vectorizer.transform(reviews[product]))) / len(reviews[product]) if reviews[product] else 0
+#     reviews = sorted(reviews.items(), key=lambda x: x[1], reverse=True)
+#     return reviews
 
 def positive_reviews(reviews, amount):
     # 10 products with most positive reviews

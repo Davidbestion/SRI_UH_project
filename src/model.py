@@ -3,8 +3,9 @@ import time
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
-from src.corpora import amazon_polarity
+from corpora import amazon_polarity
 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -16,6 +17,7 @@ def build_model(evaluate=False):
     timer = time.time()
     timer1 = time.time()
     
+    print()
     print('Loading data...')
     corpus_train, corpus_test = get_corpus()
     
@@ -49,7 +51,7 @@ def get_corpus():
     # y comentar las siguientes
     corpus_train = []
     corpus_test = []
-    for i in tqdm.tqdm(range(0,CANTIDAD)):
+    for i in tqdm.tqdm(range(0,CANTIDAD), desc='Loading data'):
         corpus_train.append(amazon_polarity['train'][i])
         corpus_test.append(amazon_polarity['test'][i])
     # hasta aqui
@@ -72,7 +74,7 @@ def preprocess_text(text):
 # Prepare the data
 def prepare_data(corpus):
     # Preprocess the text
-    for i in tqdm.tqdm(range(0,CANTIDAD)):
+    for i in tqdm.tqdm(range(0,CANTIDAD), desc='Preprocessing text'):
         corpus[i]['content'] = preprocess_text(corpus[i]['content'])
     # Extract the text and labels from the data
     texts = [item['content'] for item in corpus]
@@ -84,7 +86,7 @@ def train_model(train_texts, train_labels):
     vectorizer = TfidfVectorizer(max_features=5000)
     X_train_tfidf = vectorizer.fit_transform(train_texts)
     # Train a logistic regression model
-    model = DecisionTreeClassifier()
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
     model.fit(X_train_tfidf, train_labels)
     return model, vectorizer
 

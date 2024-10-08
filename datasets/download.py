@@ -15,11 +15,14 @@ amazon_polarity.save_to_disk("datasets/Amazon_Reviews/amazon_polarity")
 #----------------------------------------Amazon_US_customer_reviews_dataset----------------------------------------
 # ATTENTION: 
 # Uncomment to download the dataset
-# import kaggle
+import kaggle
 
 # # Check if there is enough space in disc to download (22 gb)
 # print(kaggle.api.dataset_list_files("cynthiarempel/amazon-us-customer-reviews-dataset").files[9].size)
 # kaggle.api.dataset_download_file("cynthiarempel/amazon-us-customer-reviews-dataset", "amazon_reviews_us_Digital_Software_v1_00.tsv", path="datasets/Amazon_Reviews")
+kaggle.api.dataset_download_files("andrewmvd/steam-reviews", path="datasets/Steam/Steam_Reviews", unzip=True)
+kaggle.api.dataset_download_files("nikdavis/steam-store-games", path="datasets/Steam/Steam_Store_Games", unzip=True)
+kaggle.api.dataset_download_files("piyushagni5/sentiment-analysis-for-steam-reviews", path="datasets/Steam/Sentiment_Analysis_for_Steam_Reviews", unzip=True)
 
 # # Unzip file
 # import os

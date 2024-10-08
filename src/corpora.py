@@ -3,7 +3,7 @@ import pandas as pd
 
 #Load amazon polarity from local folder
 try:
-    amazon_polarity = load_from_disk("datasets/Amazon_Reviews/amazon_polarity")
+    amazon_polarity = load_from_disk("datasets/Amazon_Reviews/amazon_polarity", )
 except:
     raise Exception("Please download the dataset first. Take a look at datasets/download.py")
 
