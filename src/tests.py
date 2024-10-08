@@ -1,6 +1,6 @@
-from corpora import amazon_data, amazon_polarity
+from src.corpora import amazon_data, amazon_polarity
 # from utils import save_sentence, load_sentences
-from model import build_model
+from arc.model import build_model
 
 build_model(evaluate=True)
 # # Example: Print the first review

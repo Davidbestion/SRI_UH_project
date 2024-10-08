@@ -1,12 +1,11 @@
-import nltk
-
-nltk.download('stopwords')
-nltk.download('wordnet')
-
-from datasets import load_dataset
+from datasets import load_from_disk
 import pandas as pd
-# Load the Amazon Customer Reviews dataset
-amazon_polarity = load_dataset('amazon_polarity')
+
+#Load amazon polarity from local folder
+try:
+    amazon_polarity = load_from_disk("datasets/Amazon_Reviews/amazon_polarity")
+except:
+    raise Exception("Please download the dataset first. Take a look at datasets/download.py")
 
 amazon_data = pd.read_csv("datasets/Amazon_Reviews/amazon_reviews_us_Digital_Software_v1_00.tsv", sep='\t')
 

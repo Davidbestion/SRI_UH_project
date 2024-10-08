@@ -1,6 +1,6 @@
 import tqdm
-from model import build_model, preprocess_text
-from corpora import amazon_data 
+from src.model import build_model, preprocess_text
+from src.corpora import amazon_data 
 
 from tqdm import tqdm
 

@@ -4,7 +4,7 @@ import time
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
-from corpora import amazon_polarity
+from src.corpora import amazon_polarity
 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
