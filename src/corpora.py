@@ -9,4 +9,7 @@ except:
 
 amazon_data = pd.read_csv("datasets/Amazon_Reviews/amazon_reviews_us_Digital_Software_v1_00.tsv", sep='\t')
 
+user_reviews = pd.read_csv('datasets/Steam/Steam_Reviews_Dataset/reviews-1-115.csv')
+descriptions = pd.read_csv('datasets/Steam/Steam-Store-Games/steam_description_data.csv')
+games = pd.read_csv('datasets/Steam/Steam-Store-Games/steam.csv')
 

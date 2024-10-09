@@ -1,12 +1,69 @@
 import tqdm
 from model import build_model, preprocess_text
-from corpora import amazon_data 
+from corpora import amazon_data, user_reviews, descriptions, games_info
 
 from tqdm import tqdm
 
 CANTIDAD = 10000
      
-corpus = amazon_data  
+corpus = amazon_data 
+
+class Game:
+    def __init__(self, app_id, name, developer, platforms, description, category, genres, tags, price):
+        self.id = app_id
+        self.name = name
+        self.developer = developer
+        self.platforms = platforms
+        self.description = description
+        self.category = category
+        self.genres = genres
+        self.tags = tags
+        self.price = price
+    
+class Review:
+    def __init__(self, user_id, game, rating, review, bought):
+        self.user_id = user_id
+        self.game_name = game.name
+        self.voted_up = rating
+        self.review = review
+        self.bought = bought
+        self.free = True if bought == True and game.price == 0.0 else False
+        
+def load_info():
+    games = []
+    for i in tqdm(range(0, CANTIDAD), desc="Loading Games"):
+        game_id = games_info['appid'][i]
+        game_name = games_info['name'][i]
+        developer = games_info['developer'][i]
+        platforms = games_info['platforms'][i]
+        for i in range(0, len(descriptions['steam_appid'])):
+            if descriptions['steam_appid'][i] == game_id:
+                info = descriptions['detailed_description'][i]
+                break
+        description = info
+        category = games_info['categories'][i]
+        genres = games_info['genres'][i]
+        tags = games_info['steamspy_tags'][i]
+        price = games_info['price'][i]
+        games.append(Game(game_id, game_name, developer, platforms, description, category, genres, tags, price))
+    reviews = []
+    for i in tqdm(range(0, len(user_reviews)), desc="Loading Reviews"):
+        user_id = user_reviews['steamid'][i]
+        chosen_game = None
+        for game in games:
+            if game.id == user_reviews['appid'][i]:
+                chosen_game = game
+                break
+        rating = user_reviews['voted_up'][i]
+        review = user_reviews['review'][i]
+        bought = False
+        if user_reviews['playtime_forever'][i] > 0:
+            bought = True
+        if chosen_game == None:
+            continue
+        reviews.append(Review(user_id, chosen_game, rating, review, bought))
+    return games, reviews
+    
 
 class Data:
     def __init__(self):
