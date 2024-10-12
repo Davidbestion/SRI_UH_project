@@ -5,23 +5,23 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
-from corpora import amazon_polarity
+from src.corpora import amazon_polarity
 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
-CANTIDAD = 10000
+CANTIDAD = 1000
 
 def build_model(evaluate=False):
     timer = time.time()
     timer1 = time.time()
     
     print()
-    print('Loading data...')
+    print('Preparing model...')
     corpus_train, corpus_test = get_corpus()
     
-    print('Preprocessing text...')
+    print('Preprocessing text for model...')
     timer1 = time.time()
     train_texts, train_labels = prepare_data(corpus_train)
     test_texts, test_labels = prepare_data(corpus_test)
@@ -41,6 +41,7 @@ def build_model(evaluate=False):
         print('Accuracy:', accuracy)
     
     print('Elapsed time:', time.time()-timer)
+    print('Model prepared.')
     return model, vectorizer
 
 def get_corpus():

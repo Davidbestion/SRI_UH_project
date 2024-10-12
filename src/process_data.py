@@ -1,33 +1,36 @@
 import tqdm
-from model import build_model, preprocess_text
-from corpora import amazon_data, user_reviews, descriptions, games_info
+from src.model import build_model, preprocess_text
+from src.corpora import amazon_data, user_reviews, descriptions, games_info
 
 from tqdm import tqdm
 
-CANTIDAD = 10000
+CANTIDAD = 1000
+CANT_REVIEWS = 10000
      
 corpus = amazon_data 
 
+#NOTE: Revisar el analisis de sentimiento.
 class Game:
-    def __init__(self, app_id, name, developer, platforms, description, category, genres, tags, price):
+    def __init__(self, app_id, name, developer, platforms, description, categories, genres, tags, price):
         self.id = app_id
         self.name = name
         self.developer = developer
         self.platforms = platforms
         self.description = description
-        self.category = category
+        self.categories = categories
         self.genres = genres
         self.tags = tags
         self.price = price
     
 class Review:
-    def __init__(self, user_id, game, rating, review, bought):
+    def __init__(self, user_id, game, rating, review, adquired, hours_played):
         self.user_id = user_id
-        self.game_name = game.name
+        self.game = game
         self.voted_up = rating
-        self.review = review
-        self.bought = bought
-        self.free = True if bought == True and game.price == 0.0 else False
+        self.review = review if review else ''
+        self.game_adquired = adquired
+        self.bougth = adquired if adquired and game.price > 0.0 else False
+        self.hours_played = hours_played if hours_played else 0
         
 def load_info():
     games = []
@@ -35,97 +38,247 @@ def load_info():
         game_id = games_info['appid'][i]
         game_name = games_info['name'][i]
         developer = games_info['developer'][i]
-        platforms = games_info['platforms'][i]
+        platforms = games_info['platforms'][i].split(';')
         for i in range(0, len(descriptions['steam_appid'])):
             if descriptions['steam_appid'][i] == game_id:
                 info = descriptions['detailed_description'][i]
                 break
         description = info
-        category = games_info['categories'][i]
-        genres = games_info['genres'][i]
-        tags = games_info['steamspy_tags'][i]
+        categories = games_info['categories'][i].split(';')
+        genres = games_info['genres'][i].split(';')
+        tags = games_info['steamspy_tags'][i].split(';')
         price = games_info['price'][i]
-        games.append(Game(game_id, game_name, developer, platforms, description, category, genres, tags, price))
+        games.append(Game(game_id, game_name, developer, platforms, description, categories, genres, tags, price))
     reviews = []
     for i in tqdm(range(0, len(user_reviews)), desc="Loading Reviews"):
-        user_id = user_reviews['steamid'][i]
         chosen_game = None
         for game in games:
             if game.id == user_reviews['appid'][i]:
                 chosen_game = game
                 break
-        rating = user_reviews['voted_up'][i]
-        review = user_reviews['review'][i]
-        bought = False
-        if user_reviews['playtime_forever'][i] > 0:
-            bought = True
         if chosen_game == None:
             continue
-        reviews.append(Review(user_id, chosen_game, rating, review, bought))
+        user_id = user_reviews['steamid'][i]
+        rating = user_reviews['voted_up'][i]
+        review = user_reviews['review'][i] if user_reviews['review'][i] else ''
+        hours_played = user_reviews['playtime_forever'][i]
+        adquired = hours_played > 0
+        reviews.append(Review(user_id, chosen_game, rating, review, adquired, hours_played))
     return games, reviews
     
 
 class Data:
     def __init__(self):
-        print('Loading products...')    
-        self.products = get_products()
-        print('Loading products info...')
-        self.sells, self.ratings, self.reviews = get_products_info(self.products)
-        print('Loading users_products...')
-        self.users_products = get_usersxproducts()
-        print('Loading users alike...')
-        self.users_alike = get_users_alike(self.users_products)
-        print('Loading recommendations...')
-        self.recommendations = recommend_products_by_user(self.users_products, self.users_alike)
-
-    def get_most_popular_products(self, n=10):
-        return most_popular_products(self.sells, n)
+        self.games, self.reviews = load_info()
+        self.model, self.vectorizer = build_model(evaluate=True)
+        self.set_all_users()#self.users
+        self.review_sentiment = self.get_review_sentiment(self.reviews)
+        self.game_corpus = {game.name: game.description for game in self.games}
     
-    def get_best_rated_products(self, n=10):
-        return best_rated_products(self.ratings, n)
+    def set_all_users(self):
+        users = {}
+        for review in tqdm(self.reviews, desc="Setting Users"):
+            if review.user_id not in users:
+                users[review.user_id] = []
+            users[review.user_id].append(review)
+        self.users = users
+
+    def get_most_adquired_games(self, n):
+        '''
+        Get the n most adquired games (games free or bought that have been played at least once).
+        
+        Args:
+            n (int): Amount of games to return.
+            
+        Returns:
+            list: List of tuples with the game name and the amount of users that have adquired it (for free or bought).
+        '''
+        most_adquired_games = {}
+        for game in tqdm(self.games, desc="Getting Most Adquired Games"):
+            adquired = 0
+            for review in self.reviews:
+                if review.game.name == game.name and review.game_adquired:
+                    adquired += 1
+            most_adquired_games[game.name] = adquired
+        most_adquired_games = sorted(most_adquired_games.items(), key=lambda x: x[1], reverse=True)
+        return most_adquired_games[:n]
     
-    def get_worst_rated_products(self, n=10):
-        return worst_rated_products(self.ratings, n)
+    def total_adquired_games(self):
+        '''
+        Get the total amount of adquired games.
+        
+        Returns:
+            int: Total amount of adquired games.
+        '''
+        adquired_games = self.get_most_adquired_games(len(self.games))
+        return len(adquired_games)
     
-    def get_positive_reviews(self, n=10):
-        return positive_reviews(self.reviews, n)
+    def most_bought_games(self, n):
+        '''
+        Get the n most bought games.
+        
+        Args:
+            n (int): Amount of games to return.
+            
+        Returns:
+            list: List of tuples with the game name, the amount of users that have bought it and the total of money earned by the game.
+        '''
+        print(f"Getting the {n} most bought games...")
+        most_bought_games = []
+        users = []
+        for game in tqdm(self.games, desc="Getting Most Bought Games"): 
+            bought = 0
+            for review in self.reviews:
+                if review.game.name == game.name and review.bougth and review.user_id not in users:
+                    bought += 1
+                    users.append(review.user_id)
+            most_bought_games.append((game.name, bought, bought * game.price))
+        most_bought_games = sorted(most_bought_games.items(), key=lambda x: x[1], reverse=True)
+        print("Complete!!")
+        return most_bought_games[:n]
     
-    def get_negative_reviews(self, n=10):
-        return negative_reviews(self.reviews, n)
+    def total_bought_games(self):
+        '''
+        Get the total amount of bought games.
+        
+        Returns:
+            int: Total amount of bought games.
+        '''
+        bought_games = self.most_bought_games(len(self.games))
+        return len(bought_games)
     
-    def get_recommend_products(self, n=10):
-        return recommend_products(self.recommendations, self.sells, n)
+    def most_played_games(self, n):
+        '''
+        Get the games with more hours played in total.
+        
+        Args:
+            n (int): Amount of games to return.
+            
+        Returns:
+            list: List of tuples with the game name and the amount of hours played
+        
+        '''
+        most_played_games = {}
+        for game in tqdm(self.games, desc="Getting Most Played Games"):
+            hours_played = 0
+            for review in self.reviews:
+                if review.game.name == game.name:
+                    hours_played += review.hours_played
+            most_played_games[game.name] = hours_played
+        most_played_games = sorted(most_played_games.items(), key=lambda x: x[1], reverse=True)
+        return most_played_games[:n]
     
-    def get_products(self):
-        return self.products
-
-    def get_sells(self):
-        return self.sells
-
-    def get_ratings(self):
-        return self.ratings
-
-    def get_reviews(self):
-        return self.reviews
-
-    def get_users_products(self):
-        return self.users_products
-
-    def get_users_alike(self):
-        return self.users_alike
-
-    def get_recommendations(self):
-        return self.recommendations
-
-    def get_products(self):
-        return self.products
-
-    def get_sells(self):
-        return self.sells
-
-    def get_ratings(self):
-        return self.ratings
+    def total_hours_played(self):
+        '''
+        Get the total amount of hours played.
+        
+        Returns:
+            int: Total amount of hours played.
+        '''
+        most_played_games = self.most_played_games(len(self.games))
+        return sum([game[1] for game in most_played_games])
     
+    def get_most_popular_tags(self, n=None):
+        '''
+        Get the n most popular tags.
+        
+        Args:
+            n (int): Amount of tags to return.
+            
+        Returns:
+            list: List of tuples with the tag name and the amount of games that have it.
+        '''
+        tags = {}
+        for review in tqdm(self.reviews, desc="Getting Most Popular Tags"):
+            for tag in review.game.tags:
+                if tag not in tags:
+                    tags[tag] = 0
+                tags[tag] += 1
+        tags = sorted(tags.items(), key=lambda x: x[1], reverse=True)
+        return tags[:n] if n else tags
+    
+    def get_most_popular_genres(self, n=None):
+        '''
+        Get the n most popular genres.
+        
+        Args:
+            n (int): Amount of genres to return.
+            
+        Returns:
+            list: List of tuples with the genre name and the amount of games that have it.
+        '''
+        genres = {}
+        for review in tqdm(self.reviews, desc="Getting Most Popular Genres"):
+            for genre in review.game.genres:
+                if genre not in genres:
+                    genres[genre] = 0
+                genres[genre] += 1
+        genres = sorted(genres.items(), key=lambda x: x[1], reverse=True)
+        return genres[:n] if n else genres
+    
+    def get_review_sentiment(self, review):
+        '''
+        Get the sentiment of the reviews for each game.
+        
+        Args:
+            review (str): Review to analyze.
+            
+        Returns:
+            int: Sentiment of the review.
+        '''
+        games = {}
+        for review in tqdm(self.reviews, desc="Getting Review Sentiment"):
+            if review.review:
+                games[review.game.name] = []
+            try:
+                games[review.game.name].append(preprocess_text(review.review))
+            except:
+                #Existe la review pero no el juego. Se debe borrar las reviews de ese juego para exitar errores.
+                #Eliminar la actual review de self.reviews
+                self.reviews.remove(review)
+        games = {game: sum(self.model.predict(self.vectorizer.transform(reviews))) / len(reviews) for game, reviews in games.items()}
+        games = sorted(games.items(), key=lambda x: x[1], reverse=True)
+        return games
+                
+    
+    def games_with_most_positive_reviews(self, n):
+        '''
+        Get the games with the most positive reviews.
+        
+        Args:
+            n (int): Amount of games to return.
+            
+        Returns:
+            list: List of tuples with the game name and the average sentiment of the reviews.
+        '''
+        try:
+            reviews = self.review_sentiment[:n] if n else self.review_sentiment
+        except:
+            reviews = self.get_review_sentiment(self.reviews)
+        return reviews[:n] if n else reviews
+    
+    def games_with_most_negative_reviews(self, n):
+        '''
+        Get the games with the most negative reviews.
+        
+        Args:
+            n (int): Amount of games to return.
+            
+        Returns:
+            list: List of tuples with the game name and the average sentiment of the reviews.
+        '''
+        try:
+            reviews = self.review_sentiment[-n:] if n else self.review_sentiment
+        except:
+            reviews = self.get_review_sentiment(self.reviews)
+        return reviews[-n:] if n else reviews
+        
+        
+        
+        
+    
+        
+         
 
 def get_products():
     products = []
