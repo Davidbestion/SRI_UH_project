@@ -14,12 +14,12 @@ def main():
     
     
     
-    # print('Mark...')
-    # game = 'Counter-Strike'
-    # print('Loading game:', game)
-    # games = data.get_most_similar_games(game)
-    # print('Games similar to', game, ': ready.')
-    # print(games)
+    print('Mark...')
+    game = 'Counter-Strike'
+    print('Loading game:', game)
+    games = data.get_most_similar_games(game)
+    print('Games similar to', game, ': ready.')
+    print(games)
     # games_reviews = data.games_with_most_negative_reviews(10)
     # print("Games with most negative reviews: ready.")
     return data

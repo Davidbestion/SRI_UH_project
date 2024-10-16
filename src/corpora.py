@@ -1,7 +1,7 @@
 from datasets import load_from_disk
 import pandas as pd
 
-CANT_REVIEWS = 10000
+
 
 #Load amazon polarity from local folder
 try:
@@ -9,10 +9,11 @@ try:
 except:
     raise Exception("Please download the dataset first. Take a look at datasets/download.py")
 
-amazon_data = pd.read_csv("datasets/Amazon_Reviews/amazon_reviews_us_Digital_Software_v1_00.tsv", sep='\t')
+# amazon_data = pd.read_csv("datasets/Amazon_Reviews/amazon_reviews_us_Digital_Software_v1_00.tsv", sep='\t')
 
 user_reviews = pd.read_csv('datasets/Steam/Steam_Reviews_Dataset/reviews-1-115.csv')
 user_reviews = user_reviews.fillna('')
+CANT_REVIEWS = 10000
 #Reducir el tamano de las user reviews a 100000
 # user_reviews = user_reviews.sample(n=100000, random_state=1)
 user_reviews = user_reviews[:CANT_REVIEWS]

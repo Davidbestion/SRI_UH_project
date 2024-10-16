@@ -24,7 +24,7 @@ if search_query:
         if user_id and user_id in data.users:
             users_alike = data.get_users_alike_by_bought_games(user_id)#, n=10)
             if users_alike:
-                st.write("Usuarios que han comprado los mismos juegos que", user)
+                st.write("Usuarios que han comprado los mismos juegos que", user_id)
                 for u in users_alike:
                     st.write(u)
             recommended_games = data.recommend_games_using_users_alike(user_id, users_alike)
@@ -35,7 +35,7 @@ if search_query:
     else:
         game = data.get_game(search_query)
         if game:
-            games = data.get_most_similar_games(game)#, n=10)
+            games = data.get_most_similar_games(game.name)#, n=10)
             if games:
                 st.write("Juegos similares a", game)
                 for g in games:
