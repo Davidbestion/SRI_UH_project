@@ -3,23 +3,26 @@ import time
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from src.corpora import amazon_polarity
+# from corpora import amazon_polarity
 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
-CANTIDAD = 10000
+CANTIDAD = 1000
 
 def build_model(evaluate=False):
     timer = time.time()
     timer1 = time.time()
     
-    print('Loading data...')
+    print()
+    print('Preparing model...')
     corpus_train, corpus_test = get_corpus()
     
-    print('Preprocessing text...')
+    print('Preprocessing text for model...')
     timer1 = time.time()
     train_texts, train_labels = prepare_data(corpus_train)
     test_texts, test_labels = prepare_data(corpus_test)
@@ -39,6 +42,7 @@ def build_model(evaluate=False):
         print('Accuracy:', accuracy)
     
     print('Elapsed time:', time.time()-timer)
+    print('Model prepared.')
     return model, vectorizer
 
 def get_corpus():
@@ -49,13 +53,13 @@ def get_corpus():
     # y comentar las siguientes
     corpus_train = []
     corpus_test = []
-    for i in tqdm.tqdm(range(0,CANTIDAD)):
+    for i in tqdm.tqdm(range(0,CANTIDAD), desc='Loading data'):
         corpus_train.append(amazon_polarity['train'][i])
         corpus_test.append(amazon_polarity['test'][i])
     # hasta aqui
     return corpus_train, corpus_test
 
-def preprocess_text(text):
+def preprocess_text(text, return_as_text=True):
     if text is None:
         return ''
     # Tokenize the text
@@ -65,14 +69,16 @@ def preprocess_text(text):
     # Lemmatize the tokens
     lemmatizer = WordNetLemmatizer()
     lemmatized_tokens = [lemmatizer.lemmatize(token) for token in filtered_tokens]
-    # Join the tokens back into a string
-    processed_text = ' '.join(lemmatized_tokens)
-    return processed_text
+    if return_as_text:
+        # Join the tokens back into a string
+        processed_text = ' '.join(lemmatized_tokens)
+        return processed_text
+    return lemmatized_tokens
 
 # Prepare the data
 def prepare_data(corpus):
     # Preprocess the text
-    for i in tqdm.tqdm(range(0,CANTIDAD)):
+    for i in tqdm.tqdm(range(0,CANTIDAD), desc='Preprocessing text'):
         corpus[i]['content'] = preprocess_text(corpus[i]['content'])
     # Extract the text and labels from the data
     texts = [item['content'] for item in corpus]
@@ -84,7 +90,7 @@ def train_model(train_texts, train_labels):
     vectorizer = TfidfVectorizer(max_features=5000)
     X_train_tfidf = vectorizer.fit_transform(train_texts)
     # Train a logistic regression model
-    model = DecisionTreeClassifier()
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
     model.fit(X_train_tfidf, train_labels)
     return model, vectorizer
 

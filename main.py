@@ -1,91 +1,36 @@
 from src import process_data
-class Data:
-    def __init__(self):
-        print('Loading products...')    
-        self.products = process_data.get_products()
-        print('Loading sells...')
-        self.sells = process_data.get_sells(self.products)
-        print('Loading ratings...')
-        self.ratings = process_data.get_ratings(self.products)
-        print('Loading reviews...')
-        self.reviews = process_data.get_reviews_sentiment(self.products)
-        print('Loading users_products...')
-        self.users_products = process_data.get_usersxproducts()
-        print('Loading users alike...')
-        self.users_alike = process_data.get_users_alike(self.users_products)
-        print('Loading recommendations...')
-        self.recommendations = process_data.recommend_products_by_user(self.users_products, self.users_alike)
-
-    def get_most_popular_products(self, n):
-        return process_data.most_popular_products(self.sells, n)
-    
-    def get_best_rated_products(self, n):
-        return process_data.best_rated_products(self.ratings, n)
-    
-    def get_worst_rated_products(self, n):
-        return process_data.worst_rated_products(self.ratings, n)
-    
-    def get_positive_reviews(self, n):
-        return process_data.positive_reviews(self.reviews, n)
-    
-    def get_negative_reviews(self, n):
-        return process_data.negative_reviews(self.reviews, n)
-    
-    def get_recommend_products(self, n):
-        return process_data.recommend_products(self.recommendations, n)
-    
-    def get_products(self):
-        return self.products
-
-    def get_sells(self):
-        return self.sells
-
-    def get_ratings(self):
-        return self.ratings
-
-    def get_reviews(self):
-        return self.reviews
-
-    def get_users_products(self):
-        return self.users_products
-
-    def get_users_alike(self):
-        return self.users_alike
-
-    def get_recommendations(self):
-        return self.recommendations
-
-    def get_products(self):
-        return self.products
-
-    def get_sells(self):
-        return self.sells
-
-    def get_ratings(self):
-        return self.ratings
-
-    def get_reviews(self):
-        return self.reviews
-
-    def get_users_products(self):
-        return self.users_products
-
-    def get_users_alike(self):
-        return self.users_alike
-
-    def get_recommendations(self):
-        return self.recommendations
-
-    def get_products(self):
-        return self.products
-
-    def get_sells(self):
-        return self.sells
 
 def main():
 
-    data = Data()
+    data = process_data.Data()
+    
+    user = 76561198107294407
+    print('Loading users alike...')
+    users_alike = data.get_users_alike_by_bought_games(user)
+    games = data.recommend_games_using_users_alike(user, users_alike)
+    print('Users alike:', users_alike)
+    print('Games recommended:', games)
+    
+    
+    
+    
+    print('Mark...')
+    game = 'Counter-Strike'
+    print('Loading game:', game)
+    games = data.get_most_similar_games(game)
+    print('Games similar to', game, ': ready.')
+    print(games)
+    # games_reviews = data.games_with_most_negative_reviews(10)
+    # print("Games with most negative reviews: ready.")
     return data
+
+
+
+
+
+
+
+
     # print('Loading products...')    
     # products = process_data.get_products()
     # print('Loading sells...')

@@ -1,8 +1,20 @@
-from src.corpora import amazon_data, amazon_polarity
+from corpora import amazon_data, amazon_polarity
 # from utils import save_sentence, load_sentences
-from src.model import build_model
+from model import build_model
+from similarity import search
+from process_data import Data
 
-build_model(evaluate=True)
+#Test similarity
+data = Data()
+games = {}
+for game in data.games:
+    games[game.name] = game.description
+corpus = list(games.values())
+query = 'A game with a lot of action and shooting'
+texts = search(corpus, query)
+print(texts)
+    
+# build_model(evaluate=True)
 # # Example: Print the first review
 # print(amazon_data['train'][0])
 
