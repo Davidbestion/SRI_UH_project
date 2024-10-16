@@ -3,10 +3,34 @@ from src import process_data
 def main():
 
     data = process_data.Data()
-    print('Mark...')
-    games_reviews = data.games_with_most_negative_reviews(10)
-    print("Games with most negative reviews: ready.")
+    
+    user = 76561198107294407
+    print('Loading users alike...')
+    users_alike = data.get_users_alike_by_bought_games(user)
+    games = data.recommend_games_using_users_alike(user, users_alike)
+    print('Users alike:', users_alike)
+    print('Games recommended:', games)
+    
+    
+    
+    
+    # print('Mark...')
+    # game = 'Counter-Strike'
+    # print('Loading game:', game)
+    # games = data.get_most_similar_games(game)
+    # print('Games similar to', game, ': ready.')
+    # print(games)
+    # games_reviews = data.games_with_most_negative_reviews(10)
+    # print("Games with most negative reviews: ready.")
     return data
+
+
+
+
+
+
+
+
     # print('Loading products...')    
     # products = process_data.get_products()
     # print('Loading sells...')

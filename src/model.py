@@ -6,6 +6,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from src.corpora import amazon_polarity
+# from corpora import amazon_polarity
 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -58,7 +59,7 @@ def get_corpus():
     # hasta aqui
     return corpus_train, corpus_test
 
-def preprocess_text(text):
+def preprocess_text(text, return_as_text=True):
     if text is None:
         return ''
     # Tokenize the text
@@ -68,9 +69,11 @@ def preprocess_text(text):
     # Lemmatize the tokens
     lemmatizer = WordNetLemmatizer()
     lemmatized_tokens = [lemmatizer.lemmatize(token) for token in filtered_tokens]
-    # Join the tokens back into a string
-    processed_text = ' '.join(lemmatized_tokens)
-    return processed_text
+    if return_as_text:
+        # Join the tokens back into a string
+        processed_text = ' '.join(lemmatized_tokens)
+        return processed_text
+    return lemmatized_tokens
 
 # Prepare the data
 def prepare_data(corpus):

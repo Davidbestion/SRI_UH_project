@@ -1,11 +1,15 @@
 import tqdm
 from src.model import build_model, preprocess_text
-from src.corpora import amazon_data, user_reviews, descriptions, games_info
+# from model import build_model, preprocess_text
+from src.corpora import amazon_data, user_reviews, descriptions, games_info, CANT_REVIEWS
+# from corpora import amazon_data, user_reviews, descriptions, games_info
+# import similarity
+import src.similarity as similarity
 
 from tqdm import tqdm
 
 CANTIDAD = 1000
-CANT_REVIEWS = 10000
+# CANT_REVIEWS = 10000
      
 corpus = amazon_data 
 
@@ -50,7 +54,7 @@ def load_info():
         price = games_info['price'][i]
         games.append(Game(game_id, game_name, developer, platforms, description, categories, genres, tags, price))
     reviews = []
-    for i in tqdm(range(0, len(user_reviews)), desc="Loading Reviews"):
+    for i in tqdm(range(0, CANT_REVIEWS), desc="Loading Reviews"):
         chosen_game = None
         for game in games:
             if game.id == user_reviews['appid'][i]:
@@ -82,6 +86,21 @@ class Data:
                 users[review.user_id] = []
             users[review.user_id].append(review)
         self.users = users
+    
+    def get_game(self, game_name):
+        '''
+        Get the game with the given name.
+        
+        Args:
+            game_name (str): Name of the game to get.
+            
+        Returns:
+            Game: Game with the given name.
+        '''
+        for game in self.games:
+            if game.name == game_name:
+                return game
+        return None
 
     def get_most_adquired_games(self, n):
         '''
@@ -233,7 +252,7 @@ class Data:
             try:
                 games[review.game.name].append(preprocess_text(review.review))
             except:
-                #Existe la review pero no el juego. Se debe borrar las reviews de ese juego para exitar errores.
+                #Existe la review pero no el juego. Se debe borrar las reviews de ese juego para evitar errores.
                 #Eliminar la actual review de self.reviews
                 self.reviews.remove(review)
         games = {game: sum(self.model.predict(self.vectorizer.transform(reviews))) / len(reviews) for game, reviews in games.items()}
@@ -272,6 +291,134 @@ class Data:
         except:
             reviews = self.get_review_sentiment(self.reviews)
         return reviews[-n:] if n else reviews
+    
+    def get_most_similar_games(self, game_name, n=None):
+        '''
+        Get the n most similar games to the given game.
+        
+        Args:
+            game_name (str): Name of the game to compare.
+            n (int): Amount of games to return.
+        
+        Returns:
+            list: List of tuples with the game name, similarity and the description.
+        '''
+        corpus = list(self.game_corpus.values())
+        query = self.game_corpus[game_name]
+        
+        if n:
+            texts = similarity.search(corpus, query, cant_docs=n)
+        else:
+            texts = similarity.search(corpus, query)# default cant_docs=10
+        
+        result = []
+        for i, sim, desc in texts:
+            result.append((list(self.game_corpus.keys())[i], sim, desc))
+        
+        return result
+            
+    # def get_users_alike_by_tags(self, user_id, n=10):
+    #     '''
+    #     Get the users that have made the same buys as the given user.
+        
+    #     Args:
+    #         user_id (str): Id of the user to compare.
+            
+    #     Returns:
+    #         list: List of users that have made the same buys.
+    #     '''
+    #     users_alike = []
+    #     game_tags = []
+    #     reviews = self.users[user_id]
+    #     for review in reviews:
+    #         game = self.get_game(review.game)
+    #         for tag in game.tags:
+    #             if tag not in game_tags:
+    #                 game_tags.append(tag)
+            
+    #     for user in self.users:
+    #         if user.user_id != user_id:
+    #             user_tags = []
+    #             for review in self.users[user]:
+    #                 game = self.get_game(review.game)
+    #                 for tag in game.tags:
+    #                     if tag not in user_tags:
+    #                         user_tags.append(tag)
+    #                 inter = len(set(game_tags).intersection(user_tags))
+    #             if inter > 0:
+    #                 users_alike.append(user)
+
+    #     users_alike = sorted(users_alike, key=lambda x: x.user_id, reverse=True)
+                    
+    #     return users_alike
+    
+    def get_users_alike_by_bought_games(self, user_id, n=10):
+        '''
+        Get the users that have made the same buys as the given user.
+        
+        Args:
+            user_id (str): Id of the user to compare.
+            
+        Returns:
+            list: List of users that have made the same buys.
+        '''
+        users_alike = []
+        games = []
+        reviews = self.users[user_id]
+        for review in reviews:
+            if review.bougth:
+                games.append(review.game)
+            
+        for user in self.users:
+            if user != user_id:
+                user_games = []
+                for review in self.users[user]:
+                    if review.game_adquired:
+                        user_games.append(review.game)
+                inter = len(set(games).intersection(user_games))
+                if inter > 0:
+                    users_alike.append(user)
+
+        users_alike = sorted(users_alike, key=lambda x: x, reverse=True)
+                    
+        if n:
+            return users_alike[:n]
+        return users_alike
+    
+    def recommend_games_using_users_alike(self, user_id, users_alike=None, n=10):
+        '''
+        Recommend games to the given user based on the games that the users that have made the same buys as him have bought.
+        
+        Args:
+            user_id (str): Id of the user to recommend games.
+            n (int): Amount of games to return.
+            
+        Returns:
+            list: List of games recommended.
+        '''
+        if not users_alike:
+            users_alike = self.get_users_alike_by_bought_games(user_id)
+        user_games = []
+        for review in self.users[user_id]:
+            if review.game_adquired:
+                user_games.append(review.game)
+        
+        # De los juegos q los users_alike tienen y el user_id no, recomendar los q mas se han comprado.
+        recommended_games = {}
+        for user in users_alike:
+            for review in self.users[user]:
+                if review.game_adquired and review.game not in user_games:
+                    if review.game not in recommended_games:
+                        recommended_games[review.game] = 0
+                    recommended_games[review.game] += 1
+        recommended_games = sorted(recommended_games.items(), key=lambda x: x[1], reverse=True)
+        
+        return recommended_games[:n]
+        
+        #Tnego los usuarios que han comprado los mismos juegos que el usuario_id
+        #y los juegos que han comprado que el usuario_id no ha comprado.
+        #Ordenar estos juegos segun la cantidad de users_alike q lo han adquirido.
+        
         
         
         

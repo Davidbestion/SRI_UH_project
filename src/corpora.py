@@ -1,6 +1,8 @@
 from datasets import load_from_disk
 import pandas as pd
 
+CANT_REVIEWS = 10000
+
 #Load amazon polarity from local folder
 try:
     amazon_polarity = load_from_disk("datasets/Amazon_Reviews/amazon_polarity", )
@@ -13,7 +15,7 @@ user_reviews = pd.read_csv('datasets/Steam/Steam_Reviews_Dataset/reviews-1-115.c
 user_reviews = user_reviews.fillna('')
 #Reducir el tamano de las user reviews a 100000
 # user_reviews = user_reviews.sample(n=100000, random_state=1)
-user_reviews = user_reviews[:100000]
+user_reviews = user_reviews[:CANT_REVIEWS]
 
 descriptions = pd.read_csv('datasets/Steam/Steam-Store-Games/steam_description_data.csv')
 descriptions = descriptions.fillna('')
